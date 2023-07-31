@@ -6,3 +6,4 @@ dependencies:
   - ipywidgets
   - matplotlib
   - scipy
+  - h5py

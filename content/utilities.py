@@ -46,12 +46,15 @@ def fade(signal, fade_length=0.075):
     return signal * bump_function(t, t[0], t[int(fade_length*n)], t[int(-1-fade_length*n)], t[-1])
 
 
-def filter_and_plot(h, t, htilde, sampling_rate, sliders, notch_filters, use_equalizer, frequencies, frequency_bin_upper_ends, hide_original_time_domain):
+def filter_and_plot(
+    h, t, htilde, sampling_rate, sliders, notch_filters, equalizer_power, notch_filter_power,
+    frequencies, frequency_bin_upper_ends
+):
     from IPython.display import display, Audio
 
     # Get levels from sliders
     levels = np.ones_like(frequencies)
-    if use_equalizer.value is True:
+    if equalizer_power.value == "On":
         slider_values = [s.value for s in sliders]
         for i, f in enumerate(frequency_bin_upper_ends):
             if i==0:
@@ -60,10 +63,11 @@ def filter_and_plot(h, t, htilde, sampling_rate, sliders, notch_filters, use_equ
             f_last = f
 
     # Get notch filters (if any)
-    for notch_filter in notch_filters.children:
-        f_begin, f_end, f_bool = [child.value for child in notch_filter.children if not isinstance(child, widgets.Label)]
-        if (f_bool is True) and (f_begin<f_end):
-            levels[(frequencies >= f_begin) & (frequencies < f_end)] = 0.0
+    if notch_filter_power.value == "On":
+        for notch_filter in notch_filters.children:
+            f_begin, f_end, f_bool = [child.value for child in notch_filter.children if not isinstance(child, widgets.Label)]
+            if (f_bool is True) and (f_begin<f_end):
+                levels[(frequencies >= f_begin) & (frequencies < f_end)] = 0.0
     
     # Filter the data and transform back to the time domain
     hprime = sampling_rate * np.fft.irfft(htilde*levels)
@@ -71,10 +75,7 @@ def filter_and_plot(h, t, htilde, sampling_rate, sliders, notch_filters, use_equ
     # Smooth the beginning and end, so there are no loud spikes as the audio turns on and off
     hprime = fade(hprime, 0.05)
     
-    if hide_original_time_domain.value:
-        plot_td_and_fd(t, hprime, frequencies, htilde*levels, h=None, htilde=htilde)
-    else:
-        plot_td_and_fd(t, hprime, frequencies, htilde*levels, h=h, htilde=htilde)
+    plot_td_and_fd(t, hprime, frequencies, htilde*levels, h=h, htilde=htilde)
 
 
 def plot_td_and_fd(t, hprime, f, htildeprime, h=None, htilde=None):

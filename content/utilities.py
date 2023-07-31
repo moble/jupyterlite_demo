@@ -123,19 +123,23 @@ def add_notch_filter(notch_filters, gap_filler):
 
 def filter_cheat(global_values, cheat_sliders=True, cheat_notches=True):
     frequency_bin_upper_ends = global_values['frequency_bin_upper_ends']
-    sliders = global_values['sliders']
-    notch_filters = global_values['notch_filters']
-    gap_filler = global_values['gap_filler']
+    sliders = global_values['equalizer_sliders']
+    notch_filters = global_values['notch_filter_list']
     if cheat_sliders:
         for f,s in zip(frequency_bin_upper_ends, sliders):
             if f<63 or f>257:
                 s.value = -200.0
     if cheat_notches:
-        notch_filters.children = tuple(widgets.HBox([widgets.FloatText(value=e, description='Begin', width='150px'),
-                                                     widgets.FloatText(value=b, description='End', width='150px'),
-                                                     gap_filler,
-                                                     widgets.Checkbox(description='Use filter', value=True)])
-                                       for e,b in [(59.6, 60.4), (119.5, 120.5), (179.0, 181.0), (299., 304.), (331.4, 334.0)])
+        notch_filters.children = tuple(
+            widgets.HBox(
+                [
+                    widgets.FloatText(value=b, description="Begin", width="150px"),
+                    widgets.FloatText(value=e, description="End", width="150px"),
+                    widgets.Checkbox(description="Use this filter", value=True)
+                ], layout={"justify_content": "space-around"}
+            )
+            for b,e in [(58.1, 60.5), (119.6, 120.1), (179.0, 181.2), (299., 304.), (331.4, 334.0)]
+        )
 
 
 def notch_data(h, sampling_rate, notch_locations_and_sizes):
